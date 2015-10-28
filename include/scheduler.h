@@ -399,7 +399,7 @@ void Scheduler<In, Out>::run_time_sharing(const In* data, size_t total_len, size
     if (glb_combine_)
       global_combine();
 
-    printf("Combination map after global combination...\n");
+    printf("Combination map after global combination, rank %d...\n",rank_);
     //dump_combination_map();
 
     // Perform post-combination processing on the master node.
@@ -704,7 +704,7 @@ void Scheduler<In, Out>::global_combine() {
     MPI_Send(local_keys, local_num_red_objs, MPI_INT, 0, rank_, MPI_COMM_WORLD);
     MPI_Send(local_red_objs, length, MPI_BYTE, 0, rank_ + num_nodes, MPI_COMM_WORLD);
   }
-  printf("Scheduler: Global combination done...\n"); 
+  printf("Scheduler: Global combination done, rank %d...\n",rank_); 
 }
 
 template <class In, class Out>
