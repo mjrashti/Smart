@@ -399,7 +399,7 @@ void Scheduler<In, Out>::run_time_sharing(const In* data, size_t total_len, size
     if (glb_combine_)
       global_combine();
 
-    dprintf("Combination map after global combination...\n");
+    printf("Combination map after global combination...\n");
     //dump_combination_map();
 
     // Perform post-combination processing on the master node.
@@ -408,7 +408,7 @@ void Scheduler<In, Out>::run_time_sharing(const In* data, size_t total_len, size
     if (rank_ == 0) {
       post_combine(combination_map_);
 
-      dprintf("Global combination map after post-combination at iteration %d...\n", iter);
+      printf("Global combination map after post-combination at iteration %d...\n", iter);
       //dump_combination_map();
     }
   }
@@ -640,12 +640,13 @@ void Scheduler<In, Out>::local_combine() {
 // No parital concurrency during combination is explored for now.
 template <class In, class Out>
 void Scheduler<In, Out>::global_combine() {
-  dprintf("Scheduler: Global combination...\n"); 
+  printf("Scheduler: Global combination...\n"); 
 
   int num_nodes;
   MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
   int local_num_red_objs = (int)combination_map_.size();
   int global_num_red_objs[num_nodes];
+  //MJR: int *global_num_red_objs = new int[num_nodes];
   MPI_Gather(&local_num_red_objs, 1, MPI_INT, global_num_red_objs, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   if (rank_ == 0) {
@@ -661,19 +662,30 @@ void Scheduler<In, Out>::global_combine() {
 
       // Deserialize reduction objects and add them to the global combination
       // map.
+
+      // MJR added
+      unique_ptr<RedObj> red_obj;
+
       for (int j = 0; j < global_num_red_objs[i]; ++j) {
-        unique_ptr<RedObj> red_obj;
+	printf("Root deserializing, j %d, i %d!\n",j,i);
+        //unique_ptr<RedObj> red_obj;
         deserialize(red_obj, &red_objs[j * red_obj_size_]);
         assert(red_obj != nullptr);
-
         if (combination_map_.find(keys[j]) != combination_map_.end()) {
-          merge(*red_obj, combination_map_[keys[j]]); 
+	  printf("merging, j: %d!\n",j);
+          merge(*red_obj, combination_map_[keys[j]]);
+	  for(int k=0;k<1;k++)
+		printf("merging done, k: %d!\r",k);
+	   
         } else {
+	  printf("combining, j: %d!\n",j);
           combination_map_[keys[j]] = move(red_obj);
-        } 
+        }
+	printf("Iteration done, j: %d!\n",j);
       }
-
+      printf("Root deleting!\n");
       delete [] red_objs;
+      printf("Root done!\n");
     }
   } else {
     // Serialize reduction objects.
@@ -692,6 +704,7 @@ void Scheduler<In, Out>::global_combine() {
     MPI_Send(local_keys, local_num_red_objs, MPI_INT, 0, rank_, MPI_COMM_WORLD);
     MPI_Send(local_red_objs, length, MPI_BYTE, 0, rank_ + num_nodes, MPI_COMM_WORLD);
   }
+  printf("Scheduler: Global combination done...\n"); 
 }
 
 template <class In, class Out>
