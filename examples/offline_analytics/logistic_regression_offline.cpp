@@ -2,22 +2,34 @@
 #include <mpi.h>
 #include <typeinfo>
 
-#include "hdf5_partitioner.h"
+//#include "hdf5_partitioner.h"
+#include "netcdf_partitioner.h"
+
 #include "logistic_regression.h"
 #include "partitioner.h"
 #include "scheduler.h"
 
-#define NUM_THREADS 4  // The # of threads for analytics task.
+#define NUM_THREADS 8  // The # of threads for analytics task.
 // For logistic regression application, STEP and NUM_COLS in logistic_regression.h must be equal.
 #define STEP  NUM_COLS  // The size of unit chunk for each single read, which groups a bunch of elements for mapping and reducing. (E.g., for a relational table, STEP should equal the # of columns.)
-#define NUM_ELEMS 1024  // The total number of elements of the simulated data.
-#define NUM_ITERS 2  // The # of iterations.
+//#define NUM_ELEMS 1024  // The total number of elements of the simulated data.
+#define NUM_ELEMS 524288
+
+//#define NUM_ITERS 2
+#define NUM_ITERS 10000  // The # of iterations.
 
 #define PRINT_COMBINATION_MAP 1
 #define PRINT_OUTPUT 1
 
-#define FILENAME  "data.h5"
-#define VARNAME "point"
+#define FILENAME  "/data/home/mrashti/projects/informer_hpcc/Smart/util/covtype_data_logistic_32col.csv.nc"
+#define VARNAME "var_31"
+
+//#define FILENAME  "/data/home/mrashti/projects/informer_hpcc/Smart/util/32_col_data_converted_for_smart_aws_test_osu.nc"
+//#define VARNAME "point"
+
+//#define FILENAME "data.h5"
+//#define VARNAME "point"
+
 
 using namespace std;
 
@@ -33,7 +45,8 @@ int main(int argc, char* argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // Load the data partition.
-  unique_ptr<Partitioner> p(new HDF5Partitioner(FILENAME, VARNAME, STEP));
+  //unique_ptr<Partitioner> p(new HDF5Partitioner(FILENAME, VARNAME, STEP));
+  unique_ptr<Partitioner> p(new NetCDFPartitioner(FILENAME, VARNAME, STEP));
   p->load_partition();
 
   // Check if the data type matches the input data of Smart scheduler.

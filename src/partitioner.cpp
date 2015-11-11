@@ -17,7 +17,7 @@ void Partitioner::load_partition() {
   // Assume that the total length value will not overflow the range of size_t.
   size_t total_len = get_varlen();
   if (total_len % step_ != 0 && rank_ == 0) {
-    printf("Error: The total length must be a multiple of unit chunk length.\n");
+    printf("Error: The total length must be a multiple of unit chunk length. %d %d\n",total_len,step_);
     exit(-1);
   }
 

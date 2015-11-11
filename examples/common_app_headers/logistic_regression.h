@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define NUM_DIMS  15  // The # of dimensions for a the explaining variable x.
+#define NUM_DIMS  31  // The # of dimensions for a the explaining variable x.
 #define NUM_COLS  NUM_DIMS + 1  // The # of dimensions for x plus a unary target variable y.
 
 // Print a feature vector.

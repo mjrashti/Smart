@@ -28,11 +28,11 @@
 
 CC = g++
 MPI_CC = mpicxx 
-CFLAGS = -Wall -O3 -std=c++11 -static-libstdc++
+CFLAGS = -Wall -O3 -std=c++11 -static-libstdc++ -g
 OPENMP_LIB = -fopenmp
 
-NETCDF_LIB = -L/usr/local/netcdf/lib -I/usr/local/netcdf/inlcude -lnetcdf 
-HDF5_LIB = -L/usr/local/hdf5/lib -I/usr/local/hdf5/include -lhdf5 -lz -lhdf5_hl
+NETCDF_LIB = -I/usr/inlcude  -L/usr/lib -lnetcdf 
+HDF5_LIB = -I/usr/include -L/usr/lib/x86_64-linux-gnu/ -lhdf5 -lhdf5_hl -L/usr/lib64 -lz
 FORMAT_LIB = $(NETCDF_LIB) $(HDF5_LIB)
 
 HOME = ../..
