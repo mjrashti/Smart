@@ -302,7 +302,7 @@ Scheduler<In, Out>::Scheduler(const SchedArgs& args) : num_threads_(args.num_thr
     reduction_map_.emplace_back(move(loc_reduction_map));
   }
   if (rank_ == 0)
-    printf("Scheduler: Reduciton map for %lu threads is ready.\n", reduction_map_.size()); 
+    printf("Scheduler: Reduction map for %lu threads is ready.\n", reduction_map_.size()); 
 
   // Extra initialization for space sharing mode.
   memset(cell_flags_, 0, CIRCULAR_BUF_SIZE_ * sizeof(bool));  // Each unset flag indicates an empty cell.

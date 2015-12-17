@@ -1,8 +1,10 @@
 #include <memory>
 #include <mpi.h>
 #include <typeinfo>
+#include <sys/time.h>
 
-#include "hdf5_partitioner.h"
+//#include "hdf5_partitioner.h"
+#include "netcdf_partitioner.h"
 #include "kmeans.h"
 #include "partitioner.h"
 #include "scheduler.h"
@@ -10,18 +12,24 @@
 #define NUM_THREADS 4  // The # of threads for analytics task.
 // For k-means application, STEP and NUM_DIMS in kmeans.h must be equal. 
 #define STEP  NUM_DIMS  // The size of unit chunk for each single read, which groups a bunch of elements for mapping and reducing. (E.g., for a relational table, STEP should equal the # of columns.) 
-#define NUM_ELEMS 1024  // The total number of elements of the simulated data.
-#define NUM_ITERS 2  // The # of iterations.
+//#define NUM_ELEMS 1024  // The total number of elements of the simulated data.
+#define NUM_ELEMS 524288
+//#define NUM_ITERS 2
+#define NUM_ITERS 10000  // The # of iterations.
 
 #define PRINT_COMBINATION_MAP 1
 #define PRINT_OUTPUT 1
 
-#define FILENAME  "data.h5"
+//#define FILENAME  "data.h5"
+#define FILENAME  "/data/home/mrashti/projects/informer_hpcc/Smart/util/32_col_data_converted_for_smart_aws_test_osu.nc"
 #define VARNAME "point"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
+  struct timeval tv1,tv2;
+  gettimeofday(&tv1,NULL);
+
   // MPI initialization.
   int mpi_status = MPI_Init(&argc, &argv);
   if (mpi_status != MPI_SUCCESS) {
@@ -31,9 +39,10 @@ int main(int argc, char* argv[]) {
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
+  printf("This is MPI rank %d\n",rank); 
   // Load the data partition.
-  unique_ptr<Partitioner> p(new HDF5Partitioner(FILENAME, VARNAME, STEP));
+  //unique_ptr<Partitioner> p(new HDF5Partitioner(FILENAME, VARNAME, STEP));
+  unique_ptr<Partitioner> p(new NetCDFPartitioner(FILENAME, VARNAME, STEP));
   p->load_partition();
 
   // Check if the data type matches the input data of Smart scheduler.
@@ -92,6 +101,8 @@ int main(int argc, char* argv[]) {
   delete [] means;
 
   MPI_Finalize();
+  gettimeofday(&tv2,NULL);
+  printf("Total time to execute this program was: %ld usec\n",(tv2.tv_sec - tv1.tv_sec)*1000000+(tv2.tv_usec - tv1.tv_usec));
 
   return 0;
 }

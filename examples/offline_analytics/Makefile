@@ -31,7 +31,10 @@ MPI_CC = mpicxx
 CFLAGS = -Wall -O3 -std=c++11 -static-libstdc++ -g
 OPENMP_LIB = -fopenmp
 
-NETCDF_LIB = -I/usr/inlcude  -L/usr/lib -lnetcdf 
+MPICH_YARN_TARGET= /data/home/mrashti/projects/informer_hpcc/mpich2-yarn/target
+
+MPI_LIB = -L/opt/mpich-3.2_install/lib/
+NETCDF_LIB = -I/usr/inlcude  $(MPI_LIB) -L/usr/lib -lnetcdf 
 HDF5_LIB = -I/usr/include -L/usr/lib/x86_64-linux-gnu/ -lhdf5 -lhdf5_hl -L/usr/lib64 -lz
 FORMAT_LIB = $(NETCDF_LIB) $(HDF5_LIB)
 
@@ -40,10 +43,19 @@ COMMON_HEADER_DIR = examples/common_app_headers
 INC_DIR = include
 SRC_DIR = src
 
-COM_OBJS = $(HOME)/$(SRC_DIR)/partitioner.o $(HOME)/$(SRC_DIR)/netcdf_partitioner.o $(HOME)/$(SRC_DIR)/hdf5_partitioner.o
-PROGS = netcdf_data_generator hdf5_data_generator histogram_offline kmeans_offline logistic_regression_offline moving_avg_offline moving_median_offline savitzky_golay_offline 
+CFLAGS += -I$(HOME)/$(INC_DIR) -I$(HOME)/$(COMMON_HEADER_DIR)
+
+COM_OBJS = $(HOME)/$(SRC_DIR)/partitioner.o $(HOME)/$(SRC_DIR)/netcdf_partitioner.o $(HOME)/$(SRC_DIR)/hdf5_partitioner.o yarn_integration.o
+PROGS = yarn_integration.o yarn_mpi_server netcdf_data_generator hdf5_data_generator histogram_offline kmeans_offline logistic_regression_offline moving_avg_offline moving_median_offline savitzky_golay_offline 
 
 all: $(PROGS)
+
+yarn_integration.o: yarn_integration.cpp
+	$(MPI_CC) $(CFLAGS) -c $<  -o $@ $(MPI_LIB)
+
+yarn_mpi_server: yarn_integration.o
+	$(MPI_CC) $(CFLAGS) -c yarn_mpi_server.cpp  -o yarn_mpi_server.o
+	$(MPI_CC) $(CFLAGS) yarn_integration.o yarn_mpi_server.o -o $@ $(MPI_LIB)
 
 netcdf_data_generator: netcdf_data_generator.cpp
 	$(CC) $(CFLAGS) $^ -o $@ $(NETCDF_LIB)
@@ -80,3 +92,6 @@ savitzky_golay_offline: savitzky_golay_offline.cpp $(COM_OBJS)
 
 clean:
 	rm  -f *.o $(COM_OBJS) $(PROGS)
+
+install: yarn_mpi_server 
+	@cp yarn_mpi_server $(MPICH_YARN_TARGET)
